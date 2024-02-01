@@ -12,7 +12,7 @@ const server = http.createServer((req, res) => {
 
   const method = req.method.toUpperCase();
 
-  console.log("method", method);
+  console.log("mmethod", method);
   console.log("trimPath", trimPath);
 
   const mainPath = trimPath.split("/")[0];
