@@ -12,7 +12,7 @@ const postsSchema = {
     type: "string",
     maxLength: 15,
     minLength: 8,
-    recuired: true,
+    required: true,
   },
   subtitle: {
     type: "string",
@@ -26,11 +26,13 @@ const postsSchema = {
       firstname: {
         type: "string",
         maxLength: 15,
+        minLength: 0,
         required: true,
       },
       lastname: {
         type: "string",
-        maxLength: 15,
+        maxLength: 20,
+        minLength: 0,
         required: true,
       },
       age: {
@@ -46,25 +48,165 @@ const postsSchema = {
 
 const validate = (obj, schema) => {
   let isValid = true;
-  if (typeof obj !== "object") {
-    return !isValid;
+  let message = "";
+  let warning = "";
+  if (typeof obj !== "object" || obj.length !== undefined) {
+    isValid = false;
+    message = "Not an object or given an array";
+    return [isValid, message];
   }
   const props = Object.keys(schema);
   props.forEach((prop) => {
-    if (!obj.hasOwnProperty(prop) && schema[prop].required) {
+    let propertyIs = obj.hasOwnProperty(prop);
+    if (!propertyIs && schema[prop].required) {
       isValid = false;
+      message += "Properties are incomplete ";
     } else if (typeof obj[prop] !== schema[prop].type) {
-      isValid = false;
+      if (propertyIs) {
+        isValid = false;
+        message += `Type of ${prop} is uncorrect `;
+      } else if (!propertyIs) {
+        warning += `(No ${prop}!!!)`;
+      }
     } else if (typeof obj[prop] === "string") {
-      //check string length and compare with schema validations
+      if (
+        obj[prop].length < schema[prop].minLength ||
+        obj[prop].length > schema[prop].maxLength
+      ) {
+        isValid = false;
+        message += `${prop} is wrong`;
+      }
     } else if (typeof obj[prop] === "number") {
-      //check number validations
+      if (obj[prop] > schema[prop].max || obj[prop] < schema[prop].min) {
+        isValid = false;
+        isNumber = true;
+        message += `${prop} is wrong`;
+      }
     } else if (typeof obj[prop] === "object") {
-      validate(obj[prop], obj[prop].schema);
+      let result = validate(obj[prop], schema[prop].schema);
+      if (!result[0]) {
+        isValid = false;
+        message += `${prop} ${result[1]} `;
+      }
     }
   });
-  return isValid;
+
+  return [isValid, message, warning];
 };
+
+/*const post1 = {
+    "title": "First Post",
+    "subtitle": "All true post",
+    "author": {
+        "firstname": "Yura",
+        "lastname": "Khachatryan",
+        "age": 22
+    }
+}
+
+const post2 = {
+  title: "Second post",
+  subtitle: "test author type",
+  author: "",
+};
+
+const post3 = {
+  title: "Third post",
+  subtitle: "test author firstname",
+  author: {
+    firstname: "jsbvksvvbukyvbuyvyubvlyuabvliaebvsdkvkayefa",
+    lastname: "Simonyan",
+    age: 19,
+  },
+};
+
+const post4 = {
+  title: "Fourth post",
+  subtitle: "test author lastname",
+  author: {
+    firstname: "Arpine",
+    lastname: "asuhfiaerhgsieurhgseiuhgeirugheriugheiaruhgiaeurhgiuerhgilaer",
+    age: 21,
+  },
+};
+
+const post5 = {
+  title: "Fifth post",
+  subtitle: "test author age",
+  author: {
+    firstname: "Davit",
+    lastname: "Sasunci",
+    age: 7000,
+  },
+};
+
+const post6 = {
+  title: "Sixth post",
+  subtitle: ["test subtitle type"],
+  author: {
+    firstname: "Karine",
+    lastname: "Soxomonyan",
+    age: 28,
+  },
+};
+
+const post7 = {
+  title: "Seventh post",
+  author: {
+    firstname: "Karine",
+    lastname: "Soxomonyan",
+    age: 24,
+  },
+};
+
+const post8 = {
+  title: 12,
+  subtitle: "test title type post8",
+  author: {
+    firstname: "Hayk",
+    lastname: "Nahapetyan",
+    age: 30,
+  },
+};
+
+const post9 = {
+  subtitle: "test no title post 9",
+  author: {
+    firstname: "Davit",
+    lastname: "Sasunyan",
+    age: 40,
+  },
+};
+
+const post10 = [];
+
+const posts = [post1, post2, post3, post4, post5, post6, post7, post8, post9, post10];
+
+const test = (posts = [], schema) => {
+  let isValid = true;
+  let count = 0;
+  let message = "";
+  if (posts.length === 0) {
+    return "No post!!";
+  } else {
+    posts.forEach((prop) => {
+      let result = validate(prop, schema);
+      isValid = result[0];
+      message = result[1];
+      if (isValid) {
+        count++;
+        console.log(`${count} post is valid ${result[2]}\n`);
+      } else {
+        count++;
+        console.log(
+          `${count} post is invalid!!\nerror message: ${message}\n              `
+        );
+      }
+    });
+  }
+}; */
+
+// test(posts, postsSchema);
 
 const getPosts = () => {
   let posts = [];
@@ -135,7 +277,7 @@ const deletePost = (receivedPosts, postIndex) => {
   });
 };
 
-// create server and implement callb ack function
+// create server and implement callback function
 const server = http.createServer((req, res) => {
   const parsedUrl = url.parse(req.url, true);
   const path = parsedUrl.pathname;
@@ -171,25 +313,37 @@ const server = http.createServer((req, res) => {
           console.log("enter POST");
           const newPost = JSON.parse(result);
           console.log(newPost);
-          createPost(newPost)
-            .then((createdPost) => {
-              console.log("createdPost", createdPost);
-              res.writeHead(201, {
-                "Content-Type": "application/json",
-              });
-              res.end(JSON.stringify(createdPost));
-            })
-            .catch((err) => {
-              console.error("error", err);
-              res.writeHead(500, {
-                "Content-Type": "application/json",
-              });
-              res.end(
-                JSON.stringify({
-                  message: "Something went wrong.",
-                })
-              );
+          let testResult = validate(newPost, postsSchema);
+          if (!testResult[0]) {
+            res.writeHead(500, {
+              "Content-Type": "application/json",
             });
+            res.end(
+              JSON.stringify({
+                message: "Something went wrong.",
+              })
+            );
+          } else {
+            createPost(newPost)
+              .then((createdPost) => {
+                console.log("createdPost", createdPost);
+                res.writeHead(201, {
+                  "Content-Type": "application/json",
+                });
+                res.end(JSON.stringify(createdPost));
+              })
+              .catch((err) => {
+                console.error("error", err);
+                res.writeHead(500, {
+                  "Content-Type": "application/json",
+                });
+                res.end(
+                  JSON.stringify({
+                    message: "Something went wrong.",
+                  })
+                );
+              });
+          }
 
           break;
         case "GET":
@@ -239,30 +393,43 @@ const server = http.createServer((req, res) => {
               case "PUT":
               case "PATCH":
                 const updatedPost = JSON.parse(result);
-                updatePost(
-                  receivedPosts,
-                  postIndex,
-                  updatedPost,
-                  method === "PATCH"
-                )
-                  .then((post) => {
-                    console.log("post updated", post);
-                    res.writeHead(200, {
-                      "Content-Type": "application/json",
-                    });
-                    res.end(JSON.stringify(post));
-                  })
-                  .catch((err) => {
-                    console.error("error", err);
-                    res.writeHead(500, {
-                      "Content-Type": "application/json",
-                    });
-                    res.end(
-                      JSON.stringify({
-                        message: "Something went wrong.",
-                      })
-                    );
+                let testResult = validate(updatedPost, postsSchema);
+                if (!testResult[0]) {
+                  res.writeHead(500, {
+                    "Content-Type": "application/json",
                   });
+                  res.end(
+                    JSON.stringify({
+                      message: "Something went wrong.",
+                    })
+                  );
+                } else {
+                  updatePost(
+                    receivedPosts,
+                    postIndex,
+                    updatedPost,
+                    method === "PATCH"
+                  )
+                    .then((post) => {
+                      console.log("post updated", post);
+                      res.writeHead(200, {
+                        "Content-Type": "application/json",
+                      });
+                      res.end(JSON.stringify(post));
+                    })
+                    .catch((err) => {
+                      console.error("error", err);
+                      res.writeHead(500, {
+                        "Content-Type": "application/json",
+                      });
+                      res.end(
+                        JSON.stringify({
+                          message: "Something went wrong.",
+                        })
+                      );
+                    });
+                }
+
                 break;
               case "DELETE":
                 deletePost(receivedPosts, postIndex)
