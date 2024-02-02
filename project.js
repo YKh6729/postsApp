@@ -94,120 +94,6 @@ const validate = (obj, schema) => {
   return [isValid, message, warning];
 };
 
-/*const post1 = {
-    "title": "First Post",
-    "subtitle": "All true post",
-    "author": {
-        "firstname": "Yura",
-        "lastname": "Khachatryan",
-        "age": 22
-    }
-}
-
-const post2 = {
-  title: "Second post",
-  subtitle: "test author type",
-  author: "",
-};
-
-const post3 = {
-  title: "Third post",
-  subtitle: "test author firstname",
-  author: {
-    firstname: "jsbvksvvbukyvbuyvyubvlyuabvliaebvsdkvkayefa",
-    lastname: "Simonyan",
-    age: 19,
-  },
-};
-
-const post4 = {
-  title: "Fourth post",
-  subtitle: "test author lastname",
-  author: {
-    firstname: "Arpine",
-    lastname: "asuhfiaerhgsieurhgseiuhgeirugheriugheiaruhgiaeurhgiuerhgilaer",
-    age: 21,
-  },
-};
-
-const post5 = {
-  title: "Fifth post",
-  subtitle: "test author age",
-  author: {
-    firstname: "Davit",
-    lastname: "Sasunci",
-    age: 7000,
-  },
-};
-
-const post6 = {
-  title: "Sixth post",
-  subtitle: ["test subtitle type"],
-  author: {
-    firstname: "Karine",
-    lastname: "Soxomonyan",
-    age: 28,
-  },
-};
-
-const post7 = {
-  title: "Seventh post",
-  author: {
-    firstname: "Karine",
-    lastname: "Soxomonyan",
-    age: 24,
-  },
-};
-
-const post8 = {
-  title: 12,
-  subtitle: "test title type post8",
-  author: {
-    firstname: "Hayk",
-    lastname: "Nahapetyan",
-    age: 30,
-  },
-};
-
-const post9 = {
-  subtitle: "test no title post 9",
-  author: {
-    firstname: "Davit",
-    lastname: "Sasunyan",
-    age: 40,
-  },
-};
-
-const post10 = [];
-
-const posts = [post1, post2, post3, post4, post5, post6, post7, post8, post9, post10];
-
-const test = (posts = [], schema) => {
-  let isValid = true;
-  let count = 0;
-  let message = "";
-  if (posts.length === 0) {
-    return "No post!!";
-  } else {
-    posts.forEach((prop) => {
-      let result = validate(prop, schema);
-      isValid = result[0];
-      message = result[1];
-      if (isValid) {
-        count++;
-        console.log(`${count} post is valid ${result[2]}\n`);
-      } else {
-        count++;
-        console.log(
-          `${count} post is invalid!!\nerror message: ${message}\n              `
-        );
-      }
-    });
-  }
-}; */
-
-// test(posts, postsSchema);
-
 const getPosts = () => {
   let posts = [];
   return new Promise((resolve, reject) => {
@@ -475,3 +361,117 @@ const server = http.createServer((req, res) => {
 server.listen(6729, () => {
   console.log("server is running on localhost:6729");
 });
+
+/*const post1 = {
+    "title": "First Post",
+    "subtitle": "All true post",
+    "author": {
+        "firstname": "Yura",
+        "lastname": "Khachatryan",
+        "age": 22
+    }
+}
+
+const post2 = {
+  title: "Second post",
+  subtitle: "test author type",
+  author: "",
+};
+
+const post3 = {
+  title: "Third post",
+  subtitle: "test author firstname",
+  author: {
+    firstname: "jsbvksvvbukyvbuyvyubvlyuabvliaebvsdkvkayefa",
+    lastname: "Simonyan",
+    age: 19,
+  },
+};
+
+const post4 = {
+  title: "Fourth post",
+  subtitle: "test author lastname",
+  author: {
+    firstname: "Arpine",
+    lastname: "asuhfiaerhgsieurhgseiuhgeirugheriugheiaruhgiaeurhgiuerhgilaer",
+    age: 21,
+  },
+};
+
+const post5 = {
+  title: "Fifth post",
+  subtitle: "test author age",
+  author: {
+    firstname: "Davit",
+    lastname: "Sasunci",
+    age: 7000,
+  },
+};
+
+const post6 = {
+  title: "Sixth post",
+  subtitle: ["test subtitle type"],
+  author: {
+    firstname: "Karine",
+    lastname: "Soxomonyan",
+    age: 28,
+  },
+};
+
+const post7 = {
+  title: "Seventh post",
+  author: {
+    firstname: "Karine",
+    lastname: "Soxomonyan",
+    age: 24,
+  },
+};
+
+const post8 = {
+  title: 12,
+  subtitle: "test title type post8",
+  author: {
+    firstname: "Hayk",
+    lastname: "Nahapetyan",
+    age: 30,
+  },
+};
+
+const post9 = {
+  subtitle: "test no title post 9",
+  author: {
+    firstname: "Davit",
+    lastname: "Sasunyan",
+    age: 40,
+  },
+};
+
+const post10 = [];
+
+const posts = [post1, post2, post3, post4, post5, post6, post7, post8, post9, post10];
+
+const test = (posts = [], schema) => {
+  let isValid = true;
+  let count = 0;
+  let message = "";
+  if (posts.length === 0) {
+    return "No post!!";
+  } else {
+    posts.forEach((prop) => {
+      let result = validate(prop, schema);
+      isValid = result[0];
+      message = result[1];
+      if (isValid) {
+        count++;
+        console.log(`${count} post is valid ${result[2]}\n`);
+      } else {
+        count++;
+        console.log(
+          `${count} post is invalid!!\nerror message: ${message}\n              `
+        );
+      }
+    });
+  }
+}; */
+
+// test(posts, postsSchema);
