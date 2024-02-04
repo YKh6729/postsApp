@@ -4,164 +4,19 @@ const url = require("url");
 const { StringDecoder } = require("string_decoder");
 const fs = require("fs");
 const { resolve } = require("path");
+const {
+  patchSchema,
+  postsSchema,
+  validate,
+} = require("./validations/postValidation");
+const {
+  getPosts,
+  createPost,
+  deletePost,
+  updatePost,
+} = require("./controllers/postControllers");
 
 const postsFilePath = "./posts.json";
-
-const postsSchema = {
-  title: {
-    type: "string",
-    maxLength: 15,
-    minLength: 8,
-    required: true,
-  },
-  subtitle: {
-    type: "string",
-    maxLength: 50,
-    minLength: 10,
-    required: false,
-  },
-  author: {
-    type: "object",
-    schema: {
-      firstname: {
-        type: "string",
-        maxLength: 15,
-        minLength: 0,
-        required: true,
-      },
-      lastname: {
-        type: "string",
-        maxLength: 20,
-        minLength: 0,
-        required: true,
-      },
-      age: {
-        type: "number",
-        min: 18,
-        max: 100,
-        required: true,
-      },
-    },
-    required: true,
-  },
-};
-
-const validate = (obj, schema) => {
-  let isValid = true;
-  let message = "";
-  let warning = "";
-  if (typeof obj !== "object" || obj.length !== undefined) {
-    isValid = false;
-    message = "Not an object or given an array";
-    return [isValid, message];
-  }
-  const props = Object.keys(schema);
-  props.forEach((prop) => {
-    let propertyIs = obj.hasOwnProperty(prop);
-    if (!propertyIs && schema[prop].required) {
-      isValid = false;
-      message += "Properties are incomplete ";
-    } else if (typeof obj[prop] !== schema[prop].type) {
-      if (propertyIs) {
-        isValid = false;
-        message += `Type of ${prop} is uncorrect `;
-      } else if (!propertyIs) {
-        warning += `(No ${prop}!!!)`;
-      }
-    } else if (typeof obj[prop] === "string") {
-      if (
-        obj[prop].length < schema[prop].minLength ||
-        obj[prop].length > schema[prop].maxLength
-      ) {
-        isValid = false;
-        message += `${prop} is wrong`;
-      }
-    } else if (typeof obj[prop] === "number") {
-      if (obj[prop] > schema[prop].max || obj[prop] < schema[prop].min) {
-        isValid = false;
-        isNumber = true;
-        message += `${prop} is wrong`;
-      }
-    } else if (typeof obj[prop] === "object") {
-      let result = validate(obj[prop], schema[prop].schema);
-      if (!result[0]) {
-        isValid = false;
-        message += `${prop} ${result[1]} `;
-      }
-    }
-  });
-
-  return [isValid, message, warning];
-};
-
-const getPosts = () => {
-  let posts = [];
-  return new Promise((resolve, reject) => {
-    fs.readFile(postsFilePath, (err, data) => {
-      if (err) {
-        console.error(err.message);
-        reject(err);
-      }
-
-      posts = data.toString("utf8");
-      resolve(JSON.parse(posts));
-    });
-  });
-};
-
-const createPost = (post) => {
-  return new Promise((resolve, reject) => {
-    getPosts().then((data) => {
-      const length = data.length;
-      let id;
-      if (!length) {
-        id = 1;
-      } else {
-        id = data[length - 1].id + 1;
-      }
-      post.id = id;
-      data.push(post);
-      fs.writeFile(postsFilePath, JSON.stringify(data), (err) => {
-        if (err) {
-          console.error(err.message);
-          reject(err);
-        }
-        resolve(post);
-      });
-    });
-  });
-};
-
-const updatePost = (currentPosts, index, newData, isPatch) => {
-  if (!isPatch) {
-    currentPosts[index] = { ...newData, id: currentPosts[index].id };
-  } else {
-    currentPosts[index] = { ...currentPosts[index], ...newData };
-  }
-
-  return new Promise((resolve, reject) => {
-    fs.writeFile(postsFilePath, JSON.stringify(currentPosts), (err) => {
-      if (err) {
-        console.error(err.message);
-        reject(err);
-      }
-      resolve(currentPosts[index]);
-    });
-  });
-};
-
-const deletePost = (receivedPosts, postIndex) => {
-  receivedPosts.splice(postIndex, 1);
-  return new Promise((resolve, reject) => {
-    fs.writeFile(postsFilePath, JSON.stringify(receivedPosts), (err) => {
-      if (err) {
-        console.error(err.message);
-        reject(err);
-      }
-      resolve();
-    });
-  });
-};
 
 // create server and implement callback function
 const server = http.createServer((req, res) => {
@@ -200,15 +55,16 @@ const server = http.createServer((req, res) => {
           const newPost = JSON.parse(result);
           console.log(newPost);
           let testResult = validate(newPost, postsSchema);
-          if (!testResult[0]) {
-            res.writeHead(500, {
+          if (!testResult.isValid) {
+            res.writeHead(400, {
               "Content-Type": "application/json",
             });
             res.end(
               JSON.stringify({
-                message: "Something went wrong.",
+                message: testResult.error.message,
               })
             );
+            return;
           } else {
             createPost(newPost)
               .then((createdPost) => {
@@ -279,8 +135,10 @@ const server = http.createServer((req, res) => {
               case "PUT":
               case "PATCH":
                 const updatedPost = JSON.parse(result);
-                let testResult = validate(updatedPost, postsSchema);
-                if (!testResult[0]) {
+                const validationSchema =
+                  method === "PUT" ? postsSchema : patchSchema;
+                let testResult = validate(updatedPost, validationSchema);
+                if (!testResult.isValid) {
                   res.writeHead(500, {
                     "Content-Type": "application/json",
                   });
@@ -373,9 +231,9 @@ server.listen(6729, () => {
 }
 
 const post2 = {
-  title: "Second post",
-  subtitle: "test author type",
-  author: "",
+  "title": "Second post",
+  "subtitle": "test author type",
+  "author": ""
 };
 
 const post3 = {
