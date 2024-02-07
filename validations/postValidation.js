@@ -80,24 +80,24 @@ const patchSchema = {
 
 const validate = (obj, schema) => {
   let isValid = true;
-  let message = "";
+  let message = [];
   if (typeof obj !== "object" || obj.length !== undefined) {
     isValid = false;
-    return { isValid, error: new Error("Not an object.") };
+    return { isValid, error: new Error(" Not an object.") };
   }
   const props = Object.keys(schema);
   const objectKeys = Object.keys(obj);
   if (!objectKeys.length) {
-    return { isValid: false, error: new Error("Object is empty.") };
+    return { isValid: false, error: new Error(" Object is empty.") };
   }
   objectKeys.forEach((key) => {
     if (props.indexOf(key) === -1) {
       isValid = false;
-      message = `There shouldn't be property with name ${key}`;
+      message.push(` property with name ${key}`);
     }
   });
 
-  if (isValid) {
+  if (!isValid) {
     return {
       isValid,
       error: message,
@@ -108,31 +108,37 @@ const validate = (obj, schema) => {
     let propertyIs = obj.hasOwnProperty(prop);
     if (!propertyIs && schema[prop].required) {
       isValid = false;
-      message += "Properties are incomplete ";
-    } else if (typeof obj[prop] !== schema[prop].type) {
+      message.push(" Properties are incomplete");
+    }
+    if (typeof obj[prop] !== schema[prop].type) {
       if (propertyIs) {
         isValid = false;
-        message += `Type of ${prop} is uncorrect `;
+        message.push(` Type of ${prop} should be ${schema[prop].type}`);
       }
-    } else if (typeof obj[prop] === "string") {
-      if (
-        obj[prop].length < schema[prop].minLength ||
-        obj[prop].length > schema[prop].maxLength
-      ) {
+    }
+    if (typeof obj[prop] === "string") {
+      if (obj[prop].length < schema[prop].minLength) {
         isValid = false;
-        message += `${prop} is wrong`;
-      }
-    } else if (typeof obj[prop] === "number") {
-      if (obj[prop] > schema[prop].max || obj[prop] < schema[prop].min) {
+        message.push(` ${prop} is too short`);
+      } else if (obj[prop].length > schema[prop].maxLength) {
         isValid = false;
-        isNumber = true;
-        message += `${prop} is wrong`;
+        message.push(` ${prop} is too long`);
       }
-    } else if (typeof obj[prop] === "object") {
+    }
+    if (typeof obj[prop] === "number") {
+      if (obj[prop] > schema[prop].max) {
+        isValid = false;
+        message.push(` ${prop} is too old`);
+      } else if (obj[prop] < schema[prop].min) {
+        isValid = false;
+        message.push(` ${prop} is to small`);
+      }
+    }
+    if (typeof obj[prop] === "object") {
       let result = validate(obj[prop], schema[prop].schema);
       if (!result.isValid) {
         isValid = false;
-        message += `${prop} ${result.error} `;
+        message.push(` ${prop} doesn't have ${result.error}`);
       }
     }
   });
